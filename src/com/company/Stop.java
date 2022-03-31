@@ -2,16 +2,26 @@
 
 package com.company;
 
+import java.util.ArrayList;
+
 // basically a key-value pair
 public class Stop implements Comparable<Stop>{
 
-    private final int id;
-    private final String name;
+    private final int id, code;
+    private final String name, desc, zoneId;
+    private final double lat, lon;
+    private ArrayList<Stop> connections;
 
-    Stop(int id, String name)
+    Stop(int id, int code, String name, String desc, double lat, double lon, String zoneId)
     {
        this.id = id;
+       this.code = code;
        this.name = name;
+       this.desc = desc;
+       this.lat = lat;
+       this.lon = lon;
+       this.zoneId = zoneId;
+       connections = new ArrayList<>();
     }
 
     public int getId() {
@@ -20,6 +30,11 @@ public class Stop implements Comparable<Stop>{
 
     public String getName() {
         return name;
+    }
+
+    public void addStop(Stop stop)
+    {
+        connections.add(stop);
     }
 
     @Override
