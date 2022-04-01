@@ -11,8 +11,6 @@ public class Network {
 
     private int noStops;
     private final ArrayList<Stop> stops;
-    private final double[][] distTo;
-    private final int[][] edgeTo;
     private final HashMap<Integer, Integer> idIndex;
 
     public Network(String stopsFile, String transfersFile, String timesFile)
@@ -68,9 +66,9 @@ public class Network {
                 int destination = Integer.parseInt(contents[1]);
                 int type = Integer.parseInt(contents[2]);
 
-                int cost = 2;
+                double cost = 2.0;
                 if(type == 2)
-                    cost = Integer.parseInt(contents[3]) / 100;
+                    cost = Double.parseDouble(contents[3]) / 100.0;
 
                 int index = idIndex.get(origin);
                 if(index != -1)     // if stop is not on list, skip
@@ -119,22 +117,15 @@ public class Network {
         {
             System.err.print(Arrays.toString(e.getStackTrace()));
         }
-
-        distTo = new double[noStops][noStops];
-        edgeTo = new int[noStops][noStops];
-
-        // calculate shortest path from every stop to every other
-        for(int i = 0; i < noStops; i++)
-        {
-            computeDijkstra(stops.get(i).getId(), distTo[i], edgeTo[i]);
-        }
     }
 
-    public void computeDijkstra(int source, double[] distTo, int[] edgeTo)
+    //returns cost of shortest path between source and destination
+    public double dijkstraSingleDest(int source, int destination, int[] edgeTo)
     {
         // set of settled stops
         Set<Integer> settled = new HashSet<>();
         PriorityQueue<Connection> pq = new PriorityQueue<>(noStops);
+        double[] distTo = new double[noStops];
 
         // initialise distTo array to max values except source which is 0
         Arrays.fill(distTo, Double.MAX_VALUE);
@@ -151,7 +142,7 @@ public class Network {
         {
             // terminates once priority queue is empty
             if(pq.isEmpty())
-                return;
+                return distTo[destination];
 
             // removes the stop with the lowest cost and stores its index
             int u = idIndex.get(pq.remove().getStop());
@@ -174,10 +165,10 @@ public class Network {
                         if(!settled.contains(v.getStop()))
                         {
                             // gets distance, and if lower than current distance, replaces it
-                            double distance = distTo[u] + v.getCost();
-                            if(distance < distTo[vIndex])
+                            double cost = distTo[u] + v.getCost();
+                            if(cost < distTo[vIndex])
                             {
-                                distTo[vIndex] = distance;
+                                distTo[vIndex] = cost;
                                 edgeTo[vIndex] = u;
                             }
                         }
@@ -187,7 +178,23 @@ public class Network {
                 }
             }
         }
+        return distTo[destination];
     }
+
+    // returns -1 if id not present
+    public int getIndex(int id)
+    {
+        Integer index = idIndex.get(id);
+        if(index != null)
+            return index;
+        return -1;
+    }
+
+    public int getNoStops()
+    {
+        return noStops;
+    }
+
 }
 
 
