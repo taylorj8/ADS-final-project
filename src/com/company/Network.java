@@ -9,14 +9,18 @@ import java.util.*;
 
 public class Network {
 
-    private int noStops, noConnections;
-    private ArrayList<Stop> stops;
+    private int noStops;
+    private final ArrayList<Stop> stops;
+    private final double[][] distTo;
+    private final int[][] edgeTo;
+    private final HashMap<Integer, Integer> idIndex;
 
     public Network(String stopsFile, String transfersFile, String timesFile)
     {
+        stops = new ArrayList<>();
+        idIndex = new HashMap<>();
         try
         {
-            stops = new ArrayList<>();
             File file = new File("src\\com\\company\\input-files\\" + stopsFile);
             BufferedReader br = new BufferedReader(new FileReader(file));
 
@@ -44,10 +48,13 @@ public class Network {
                 stops.add(new Stop(Integer.parseInt(contents[0]), code, name, contents[3],
                         Double.parseDouble(contents[4]), Double.parseDouble(contents[5]), contents[6]));
 
+                // index allows me to map a stop's id to its index in the arraylist, allowing for constant time
+                // lookup on average
+                idIndex.put(Integer.parseInt(contents[0]), noStops);
+
                 line = br.readLine();
                 noStops++;
             }
-            Collections.sort(stops);
 
             file = new File("src\\com\\company\\input-files\\" + transfersFile);
             br = new BufferedReader(new FileReader(file));
@@ -65,11 +72,10 @@ public class Network {
                 if(type == 2)
                     cost = Integer.parseInt(contents[3]) / 100;
 
-                int index = binarySearch(stops, origin);
+                int index = idIndex.get(origin);
                 if(index != -1)     // if stop is not on list, skip
                 {
                     stops.get(index).addConnection(destination, cost);
-                    noConnections++;
                 }
                 line = br.readLine();
             }
@@ -91,14 +97,13 @@ public class Network {
                 {
                     int destination = Integer.parseInt(second[3]);
 
-                    int index = binarySearch(stops, origin);
+                    int index = idIndex.get(origin);
                     if(index != -1)     // if stop is not on list, skip
                     {
                         // add connection only if not already added
                         if(!stops.get(index).containsDestination(destination))
                         {
                             stops.get(index).addConnection(destination, 1);
-                            noConnections++;
                         }
                     }
 
@@ -114,9 +119,18 @@ public class Network {
         {
             System.err.print(Arrays.toString(e.getStackTrace()));
         }
+
+        distTo = new double[noStops][noStops];
+        edgeTo = new int[noStops][noStops];
+
+        // calculate shortest path from every stop to every other
+        for(int i = 0; i < noStops; i++)
+        {
+            computeDijkstra(stops.get(i).getId(), distTo[i], edgeTo[i]);
+        }
     }
 
-    public void computeDijkstra(int source, double[] distTo)
+    public void computeDijkstra(int source, double[] distTo, int[] edgeTo)
     {
         // set of settled stops
         Set<Integer> settled = new HashSet<>();
@@ -124,7 +138,10 @@ public class Network {
 
         // initialise distTo array to max values except source which is 0
         Arrays.fill(distTo, Double.MAX_VALUE);
-        distTo[source] = 0.0;
+        distTo[idIndex.get(source)] = 0.0;
+
+        // initialise all entries in edgeTo to -1
+        Arrays.fill(edgeTo, -1);
 
         // add first stop to pq
         pq.add(new Connection(source, 0.0));
@@ -136,67 +153,40 @@ public class Network {
             if(pq.isEmpty())
                 return;
 
-            // removes and stores the stop with the lowest distance
-            int u = pq.remove().getStop();
+            // removes the stop with the lowest cost and stores its index
+            int u = idIndex.get(pq.remove().getStop());
 
             if(!settled.contains(u))
             {
                 // once stop is removed from pq it becomes settled
                 settled.add(u);
 
-                Stop origin = getStop(u);
+                Stop origin = stops.get(u);
                 if(origin != null)
                 {
                     // process all neighbouring stops to current stop u
                     for(int i = 0; i < origin.getNoDestinations(); i++)
                     {
                         Connection v = origin.getConnection(i);
+                        int vIndex = idIndex.get(v.getStop());
 
                         // checks if stop already settled
                         if(!settled.contains(v.getStop()))
                         {
                             // gets distance, and if lower than current distance, replaces it
                             double distance = distTo[u] + v.getCost();
-                            if(distance < distTo[v.getStop()])
+                            if(distance < distTo[vIndex])
                             {
-                                distTo[v.getStop()] = distance;
+                                distTo[vIndex] = distance;
+                                edgeTo[vIndex] = u;
                             }
                         }
                         // add each of the stops that neighbour u to the pq
-                        pq.add(new Connection(v.getStop(), distTo[v.getStop()]));
+                        pq.add(new Connection(v.getStop(), distTo[vIndex]));
                     }
                 }
             }
         }
-    }
-
-    public Stop getStop(int i)
-    {
-        return stops.get(binarySearch(stops, i));
-    }
-
-    public int binarySearch(ArrayList<Stop> stops, int x)
-    {
-        return binarySearch(stops, x, 0, stops.size());
-    }
-
-    private int binarySearch(ArrayList<Stop> stops, int x, int lo, int hi)
-    {
-        if (hi >= lo)
-        {
-            int mid = lo + (hi - lo) / 2;
-
-            if (stops.get(mid).getId() == x)
-                return mid;
-
-            if (stops.get(mid).getId() > x)
-                return binarySearch(stops, x, lo, mid - 1);
-
-            return binarySearch(stops, x, mid + 1, hi);
-        }
-
-        // if element is not present, return -1
-        return -1;
     }
 }
 
