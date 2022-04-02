@@ -24,18 +24,6 @@ public class Stop implements Comparable<Stop> {
         connections = new ArrayList<>();
     }
 
-    // for binary search
-    Stop(int id)
-    {
-        this.id = id;
-        this.code = -1;
-        this.name = null;
-        this.desc = null;
-        this.lon = -1;
-        this.lat = -1;
-        this.zoneId = null;
-    }
-
     public int getId() {
         return id;
     }

@@ -72,9 +72,15 @@ public class Main {
                             validInput = true;
                             int[] edgeTo = new int[network.getNoStops()];
                             double cost = network.dijkstraSingleDest(origin, destination, edgeTo);
+                            int[] path = network.getPath(origin, destination, edgeTo);
 
-                            System.out.printf("The cost from stop %d to stop %d is %.01f\n",
+                            System.out.printf("The cost from stop %d to stop %d is %.01f, taking the path ",
                                     origin, destination, cost);
+                            for(int i = 0; i < path.length-1; i++)
+                            {
+                                System.out.printf("%d, ", path[i]);
+                            }
+                            System.out.printf("%d.\n\n", path[path.length-1]);
                         }
                     }
                     break;

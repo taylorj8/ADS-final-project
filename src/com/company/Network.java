@@ -181,6 +181,27 @@ public class Network {
         return distTo[destination];
     }
 
+    public int[] getPath(int origin, int destination, int[] edgeTo)
+    {
+        LinkedList<Integer> pathStack = new LinkedList<>();
+
+        int stop = stops.get(edgeTo[idIndex.get(destination)]).getId();
+        while(stop != origin)
+        {
+            pathStack.push(stop);
+            stop = stops.get(edgeTo[idIndex.get(stop)]).getId();
+        }
+
+        int[] path = new int[pathStack.size()+2];
+        path[0] = origin;
+        for(int i = 1; !pathStack.isEmpty(); i++)
+        {
+            path[i] = pathStack.pop();
+        }
+        path[path.length-1] = destination;
+        return path;
+    }
+
     // returns -1 if id not present
     public int getIndex(int id)
     {
