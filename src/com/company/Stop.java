@@ -10,7 +10,7 @@ public class Stop implements Comparable<Stop> {
     private final int id, code;
     private final String name, desc, zoneId;
     private final double lat, lon;
-    private ArrayList<Connection> connections;
+    private final ArrayList<Connection> connections;
 
     public Stop(int id, int code, String name, String desc, double lat, double lon, String zoneId)
     {
@@ -71,6 +71,27 @@ public class Stop implements Comparable<Stop> {
     @Override
     public String toString()
     {
-        return id + ", " + name;
+        String codeString = "";
+        if(code != -1)
+            codeString += code;
+        else
+            codeString = "n/a";
+
+
+        StringBuilder str = new StringBuilder(String.format("Name: %s\nDescription: %s\nID: %d\nCode: %s\nZone ID: %s\nLongitude: %f\nLatitude: %f\nConnected stop(s) by id: ",
+                name, desc, id, codeString, zoneId, lon, lat));
+
+        if(connections.size() != 0)
+        {
+            for(Connection connection : connections)
+            {
+                str.append(connection.getStop()).append(", ");
+            }
+        }
+        else
+        {
+            str.append("n/a");
+        }
+        return str.substring(0, str.length()-2);
     }
 }

@@ -23,8 +23,8 @@ public class Main {
             switch(userInput.toLowerCase())
             {
                 case "1":
-                    boolean validInput = false;
                     int origin = -1, destination = -1;
+                    boolean validInput = false;
                     while(!validInput)
                     {
                         System.out.print("Enter the ID of the origin stop: ");
@@ -34,13 +34,13 @@ public class Main {
                         }
                         catch(Exception e)
                         {
-                            System.out.print("Invalid input\n");
+                            System.out.println("Invalid input");
                             continue;
                         }
 
                         if(network.getIndex(origin) == -1)
                         {
-                            System.out.print("Origin ID is invalid\n");
+                            System.out.println("Origin ID is invalid");
                         }
                         else
                         {
@@ -58,33 +58,55 @@ public class Main {
                         }
                         catch(Exception e)
                         {
-                            System.out.print("Invalid input: enter an integer\n");
+                            System.out.println("Invalid input: enter an integer");
                             continue;
                         }
 
                         if(network.getIndex(destination) == -1)
                         {
-                            System.out.print("Destination ID is invalid\n");
+                            System.out.println("Destination ID is invalid");
                         }
                         else
                         {
                             validInput = true;
                             int[] edgeTo = new int[network.getNoStops()];
                             double cost = network.dijkstraSingleDest(origin, destination, edgeTo);
-                            int[] path = network.getPath(origin, destination, edgeTo);
-
-                            System.out.printf("The cost from stop %d to stop %d is %.01f, taking the path ",
-                                    origin, destination, cost);
-                            for(int i = 0; i < path.length-1; i++)
+                            if(cost != Double.MAX_VALUE)
                             {
-                                System.out.printf("%d, ", path[i]);
+                                int[] path = network.getPath(origin, destination, edgeTo);
+
+                                System.out.printf("The cost from stop %d to stop %d is %.01f, taking the path %d, ",
+                                        origin, destination, cost, origin);
+                                for(int stop : path)
+                                {
+                                    System.out.printf("%d, ", stop);
+                                }
+                                System.out.printf("%d.\n\n", destination);
                             }
-                            System.out.printf("%d.\n\n", path[path.length-1]);
+                            else
+                            {
+                                System.out.printf("No path exists between stop %d and stop %d.\n\n", origin, destination);
+                            }
                         }
                     }
                     break;
                 case "2":
-                    System.out.print("Enter the search term:");
+                    System.out.print("Enter the search term: ");
+                    String searchTerm = s.next().toLowerCase();
+                    Stop[] matchingStops = network.getMatchingStops(searchTerm);
+
+                    if(matchingStops.length != 0)
+                    {
+                        System.out.print("These are the stops that match:\n\n");
+                        for(Stop stop : matchingStops)
+                        {
+                            System.out.print(stop.toString() + "\n\n");
+                        }
+                    }
+                    else
+                    {
+                        System.out.print("There are no stops that match your search.\n\n");
+                    }
                     break;
                 case "3":
                     System.out.print("Enter the time of arrival: ");

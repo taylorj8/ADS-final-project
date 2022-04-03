@@ -11,11 +11,13 @@ public class Network {
 
     private int noStops;
     private final ArrayList<Stop> stops;
+    private final TST<Stop> names;
     private final HashMap<Integer, Integer> idIndex;
 
     public Network(String stopsFile, String transfersFile, String timesFile)
     {
         stops = new ArrayList<>();
+        names = new TST<>();
         idIndex = new HashMap<>();
         try
         {
@@ -43,17 +45,28 @@ public class Network {
                     name = name.substring(3) + " " + prefix.trim();
                 }
 
-                stops.add(new Stop(Integer.parseInt(contents[0]), code, name, contents[3],
-                        Double.parseDouble(contents[4]), Double.parseDouble(contents[5]), contents[6]));
+                //added for clarity
+                int id = Integer.parseInt(contents[0]);
+                String desc = contents[3];
+                double lat = Double.parseDouble(contents[4]);
+                double lon = Double.parseDouble(contents[5]);
+                String zoneID = contents[6];
+
+                Stop stop = new Stop(id, code, name, desc, lat, lon, zoneID);
+                stops.add(stop);
+
+                // Ternary search tree with id of stop as value
+                names.put(name.toLowerCase(), stop);
 
                 // index allows me to map a stop's id to its index in the arraylist, allowing for constant time
                 // lookup on average
-                idIndex.put(Integer.parseInt(contents[0]), noStops);
+                idIndex.put(id, noStops);
 
                 line = br.readLine();
                 noStops++;
             }
 
+            br.close();
             file = new File("src\\com\\company\\input-files\\" + transfersFile);
             br = new BufferedReader(new FileReader(file));
 
@@ -78,7 +91,7 @@ public class Network {
                 line = br.readLine();
             }
 
-
+            br.close();
             file = new File("src\\com\\company\\input-files\\" + timesFile);
             br = new BufferedReader(new FileReader(file));
 
@@ -183,7 +196,7 @@ public class Network {
 
     public int[] getPath(int origin, int destination, int[] edgeTo)
     {
-        LinkedList<Integer> pathStack = new LinkedList<>();
+        Stack<Integer> pathStack = new Stack<>();
 
         int stop = stops.get(edgeTo[idIndex.get(destination)]).getId();
         while(stop != origin)
@@ -192,13 +205,11 @@ public class Network {
             stop = stops.get(edgeTo[idIndex.get(stop)]).getId();
         }
 
-        int[] path = new int[pathStack.size()+2];
-        path[0] = origin;
-        for(int i = 1; !pathStack.isEmpty(); i++)
+        int[] path = new int[pathStack.size()];
+        for(int i = 0; i < path.length; i++)
         {
             path[i] = pathStack.pop();
         }
-        path[path.length-1] = destination;
         return path;
     }
 
@@ -209,6 +220,18 @@ public class Network {
         if(index != null)
             return index;
         return -1;
+    }
+
+    public Stop[] getMatchingStops(String searchTerm)
+    {
+        List<String> keys = new ArrayList<>();
+        names.keysWithPrefix(searchTerm).forEach(keys::add);
+        Stop[] stops = new Stop[keys.size()];
+        for(int i = 0; i < stops.length; i++)
+        {
+            stops[i] = names.get(keys.get(i));
+        }
+        return stops;
     }
 
     public int getNoStops()
