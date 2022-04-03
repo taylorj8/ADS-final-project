@@ -119,7 +119,7 @@ public class Network {
         }
     }
 
-    //returns cost of shortest path between source and destination
+    // returns cost of shortest path between source and destination
     public double dijkstraSingleDest(int source, int destination, int[] edgeTo)
     {
         // set of settled stops
@@ -142,7 +142,7 @@ public class Network {
         {
             // terminates once priority queue is empty
             if(pq.isEmpty())
-                return distTo[destination];
+                return distTo[idIndex.get(destination)];
 
             // removes the stop with the lowest cost and stores its index
             int u = idIndex.get(pq.remove().getStop());

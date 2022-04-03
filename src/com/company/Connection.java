@@ -7,9 +7,9 @@ public class Connection implements Comparable<Connection> {
     private final int stop;
     private final double cost;
 
-    public Connection(int destination, double cost)
+    public Connection(int stop, double cost)
     {
-        this.stop = destination;
+        this.stop = stop;
         this.cost = cost;
     }
 

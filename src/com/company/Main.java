@@ -2,7 +2,6 @@
 
 package com.company;
 
-import java.util.Locale;
 import java.util.Scanner;
 
 public class Main {
@@ -23,7 +22,7 @@ public class Main {
 
             switch(userInput.toLowerCase())
             {
-                case "1":       //todo add list of edges
+                case "1":
                     boolean validInput = false;
                     int origin = -1, destination = -1;
                     while(!validInput)
@@ -59,7 +58,7 @@ public class Main {
                         }
                         catch(Exception e)
                         {
-                            System.out.print("Invalid input\n");
+                            System.out.print("Invalid input: enter an integer\n");
                             continue;
                         }
 
