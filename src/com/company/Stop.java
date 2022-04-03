@@ -37,11 +37,6 @@ public class Stop implements Comparable<Stop> {
         connections.add(new Connection(destination, cost));
     }
 
-    public ArrayList<Connection> getConnections()
-    {
-        return connections;
-    }
-
     public boolean containsDestination(int destination)
     {
         for(Connection connection : connections)

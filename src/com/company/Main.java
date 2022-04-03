@@ -109,7 +109,43 @@ public class Main {
                     }
                     break;
                 case "3":
-                    System.out.print("Enter the time of arrival: ");
+                    boolean inputValid = false;
+                    String arrivalTime = "";
+                    int time = -1;
+                    while(!inputValid)
+                    {
+                        System.out.print("Enter the time of arrival (formatted as hh:mm:ss): ");
+                        arrivalTime = s.next();
+                        time = network.convertTime(arrivalTime);
+
+                        if(time == -1)
+                        {
+                            System.out.println("Invalid input");
+                        }
+                        else if(time == -2)
+                        {
+                            System.out.println("Numbers out of range");
+                        }
+                        else
+                        {
+                            inputValid = true;
+                        }
+                    }
+                    Stop[] timedStops = network.getStopsByTime(time);
+
+                    if(timedStops != null)
+                    {
+                        System.out.printf("These are the the last stop in each of the trips that arrive at %s:\n\n",
+                                arrivalTime);
+                        for(Stop stop : timedStops)
+                        {
+                            System.out.print(stop.toString() + "\n\n");
+                        }
+                    }
+                    else
+                    {
+                        System.out.print("There are no stops that match your search.\n\n");
+                    }
                     break;
                 case "quit":
                     running = false;

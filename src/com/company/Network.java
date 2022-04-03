@@ -11,14 +11,16 @@ public class Network {
 
     private int noStops;
     private final ArrayList<Stop> stops;
-    private final TST<Stop> names;
     private final HashMap<Integer, Integer> idIndex;
+    private final TST<Stop> names;
+    private final TreeMap<Integer, TreeSet<Stop>> times;
 
     public Network(String stopsFile, String transfersFile, String timesFile)
     {
         stops = new ArrayList<>();
-        names = new TST<>();
         idIndex = new HashMap<>();
+        names = new TST<>();
+        times = new TreeMap<>();
         try
         {
             File file = new File("src\\com\\company\\input-files\\" + stopsFile);
@@ -97,11 +99,12 @@ public class Network {
 
             line = br.readLine();
             line = br.readLine();
+            String[] first, second = new String[0];
             while(line != null)
             {
-                String[] first = line.split(",");
+                first = line.split(",");
                 int currentTripId = Integer.parseInt(first[0]);
-                String[] second = br.readLine().split(",");
+                second = br.readLine().split(",");
 
                 int origin = Integer.parseInt(first[3]);
                 while(Integer.parseInt(second[0]) == currentTripId && line != null)
@@ -116,6 +119,10 @@ public class Network {
                         {
                             stops.get(index).addConnection(destination, 1);
                         }
+
+                        int time = convertTime(second[1]);
+                        if(time >= 0)
+                            addToTimes(time, stops.get(idIndex.get(destination)));
                     }
 
                     origin = destination;
@@ -125,6 +132,10 @@ public class Network {
                 }
             }
             br.close();
+            //add the last time in the file to the tree
+            int time = convertTime(second[1]);
+            if(time >= 0)
+                addToTimes(time, stops.get(idIndex.get(Integer.parseInt(second[3]))));
         }
         catch(Exception e)
         {
@@ -149,7 +160,6 @@ public class Network {
 
         // add first stop to pq
         pq.add(new Connection(source, 0.0));
-
 
         while(settled.size() != noStops)
         {
@@ -232,6 +242,60 @@ public class Network {
             stops[i] = names.get(keys.get(i));
         }
         return stops;
+    }
+
+    //returns stops that arrive at passed time sorted by id
+    public Stop[] getStopsByTime(int time)
+    {
+        TreeSet<Stop> set = times.get(time);
+
+        if(set == null)
+            return null;
+
+        Stop[] array = new Stop[set.size()];
+        for(int i = 0; i < array.length; i++)
+        {
+            array[i] = set.pollFirst();
+        }
+        return array;
+    }
+
+    public void addToTimes(int time, Stop stop)
+    {
+        TreeSet<Stop> set = times.get(time);
+        if(set == null)
+        {
+            TreeSet<Stop> newSet = new TreeSet<>();
+            newSet.add(stop);
+            times.put(time, newSet);
+        }
+        else
+        {
+            set.add(stop);
+        }
+    }
+
+    // converts time string to int, returns negative number based on failure
+    public int convertTime(String str)
+    {
+        int[] timeArray = new int[3];
+        try
+        {
+            String[] timeStrArray = str.trim().split(":");
+            for(int i = 0; i < timeStrArray.length; i++)
+            {
+                timeArray[i] = Integer.parseInt(timeStrArray[i]);
+            }
+        }
+        catch(Exception e)
+        {
+            return -1;
+        }
+
+        if(timeArray[0] < 0 || timeArray[0] > 23 || timeArray[1] < 0 || timeArray[1] > 59 || timeArray[2] < 0 || timeArray[2] > 59)
+            return -2;
+
+        return (timeArray[0] * 100 + timeArray[1]) * 100 + timeArray[2];
     }
 
     public int getNoStops()
