@@ -122,13 +122,13 @@ public class Main {
                         arrivalTime = s.nextLine();
 
                         time = network.convertTime(arrivalTime);
-                        if(!arrivalTime.matches("\\d{1,2}:\\d{2}:\\d{2}") || time == -1)
-                        {
-                            System.out.println("Invalid input");
-                        }
-                        else if(time == -2)
+                        if(time == -2)
                         {
                             System.out.println("Numbers out of range");
+                        }
+                        else if(!arrivalTime.matches("\\d{1,2}:\\d{2}:\\d{2}") || time == -1)
+                        {
+                            System.out.println("Invalid input");
                         }
                         else
                         {

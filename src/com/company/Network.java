@@ -41,11 +41,13 @@ public class Network {
 
                 // moves prefix to end of name
                 String name = contents[2];
-                String prefix = name.substring(0,3);
+                String prefix = name.substring(0,9);
+                if(prefix.equals("FLAGSTOP "))
+                    name = name.substring(9) + " " + prefix.trim();
+
+                prefix = name.substring(0,3);
                 if(prefix.equals("WB ") || prefix.equals("NB ") || prefix.equals("SB ") || prefix.equals("EB "))
-                {
                     name = name.substring(3) + " " + prefix.trim();
-                }
 
                 //added for clarity
                 int id = Integer.parseInt(contents[0]);
