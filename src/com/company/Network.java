@@ -13,10 +13,11 @@ public class Network {
     private final ArrayList<Stop> stops;
     private final HashMap<Integer, Integer> idIndex;
     private final TST<Stop> names;
-    private final TreeMap<Integer, TreeSet<Stop>> times;
+    private final TreeMap<Integer, TreeSet<Trip>> times;
 
     public Network(String stopsFile, String transfersFile, String timesFile)
     {
+        System.out.println("Reading files...\n");
         stops = new ArrayList<>();
         idIndex = new HashMap<>();
         names = new TST<>();
@@ -107,11 +108,12 @@ public class Network {
             br.readLine();      // first line of file skipped as just info about contents of file
             line = br.readLine();
             // lines processed in pairs, so need to keep track of first and second line in pair
-            String[] first, second = new String[0];
+            String[] first, second;
 
             while(line != null)
             {
-                first = line.split(",");    //split first line into its components
+                first = line.split(",");    // split first line into its components
+                addTripFromLine(first);     // adds the first trip from each trip id to times tree map
                 int currentTripId = Integer.parseInt(first[0]);
                 second = br.readLine().split(",");      // split second line into its components
 
@@ -127,15 +129,14 @@ public class Network {
                         // add connection only if not already added
                         if(!stops.get(index).containsDest(destination))
                         {
+                            // cost for connections from this file always 1
                             stops.get(index).addConnection(destination, 1);
                         }
 
+                        // add trip to times tree map (apart from first with each trip id, handled earlier in code)
                         // converts time from string representation to int, returns negative number if error
-                        int time = convertTime(second[1]);
-                        if(time >= 0)
-                            addToTimes(time, stops.get(idIndex.get(destination)));
+                        addTripFromLine(second);
                     }
-
                     origin = destination;
                     line = br.readLine();
                     if(line != null)
@@ -143,10 +144,6 @@ public class Network {
                 }
             }
             br.close();
-            //add the last time in the file to the tree
-            int time = convertTime(second[1]);
-            if(time >= 0)
-                addToTimes(time, stops.get(idIndex.get(Integer.parseInt(second[3]))));
         }
         catch(Exception e)
         {
@@ -261,14 +258,14 @@ public class Network {
 
     // returns stops that arrive at passed time, sorted by id
     // returns null if no matching stops
-    public Stop[] getStopsByTime(int time)
+    public Trip[] getTripsByTime(int time)
     {
-        TreeSet<Stop> set = times.get(time);
+        TreeSet<Trip> set = times.get(time);
         if(set == null)
             return null;
 
         //convert tree set to array before returning
-        Stop[] array = new Stop[set.size()];
+        Trip[] array = new Trip[set.size()];
         for(int i = 0; i < array.length; i++)
         {
             array[i] = set.pollFirst();
@@ -276,26 +273,49 @@ public class Network {
         return array;
     }
 
-    public void addToTimes(int time, Stop stop)
+    public void addTrip(int time, Trip trip)
     {
         // tree set used as it maintains sorted order and implicitly handles duplicates
-        TreeSet<Stop> set = times.get(time);
+        TreeSet<Trip> set = times.get(time);
         // if no times already in tree tree, new tree set made and added
         if(set == null)
         {
-            TreeSet<Stop> newSet = new TreeSet<>();
-            newSet.add(stop);
+            TreeSet<Trip> newSet = new TreeSet<>();
+            newSet.add(trip);
             times.put(time, newSet);
         }
         else    // if time already in tree, add to the tree set
         {
-            set.add(stop);
+            set.add(trip);
+        }
+    }
+
+    public void addTripFromLine(String[] line)
+    {
+        int time = convertTime(line[1]);
+        if(time >= 0)
+        {
+            if(line.length == 9)
+            {
+                // [0] = trip id, [3] = stop id, [4] = stop sequence, [8] = distance travelled, [1] = arrival time, [2] = departure time
+                addTrip(time, new Trip(Integer.parseInt(line[0]), Integer.parseInt(line[3]), Integer.parseInt(line[4]),
+                        Double.parseDouble(line[8]), line[1], line[2]));
+            }
+            else
+            {
+                // some lines don't have dist travelled, since it is at the end of the line, it is not added to the array
+                addTrip(time, new Trip(Integer.parseInt(line[0]), Integer.parseInt(line[3]), Integer.parseInt(line[4]),
+                        0.0, line[1], line[2]));
+            }
         }
     }
 
     // converts time string to int, returns negative number based on failure
     public int convertTime(String str)
     {
+        // remove whitespace from beginning and end of string if present
+        str = str.trim();
+
         // checks string in correct format
         if(!str.matches("\\d{1,2}:\\d{2}:\\d{2}"))
             return -1;
@@ -307,7 +327,7 @@ public class Network {
             timeArray[i] = Integer.parseInt(timeStrArray[i]);
         }
 
-        // check numbers in correct range
+        //check numbers in correct range
         if(timeArray[0] < 0 || timeArray[0] > 23 || timeArray[1] < 0 || timeArray[1] > 59 || timeArray[2] < 0 || timeArray[2] > 59)
             return -2;
 

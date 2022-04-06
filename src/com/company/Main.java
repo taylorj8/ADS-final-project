@@ -16,7 +16,7 @@ public class Main {
             System.out.print("What would you like to do?\n" +
                     "1. Find shortest path between two stops\n" +
                     "2. Search for stops by name\n" +
-                    "3. Search for stops by arrival time\n" +
+                    "3. Search for trips by arrival time\n" +
                     "Enter the appropriate number or quit to exit: ");
             String userInput = s.nextLine();
 
@@ -134,20 +134,20 @@ public class Main {
                             inputValid = true;
                         }
                     }
-                    Stop[] timedStops = network.getStopsByTime(time);
+                    Trip[] timedStops = network.getTripsByTime(time);
 
                     if(timedStops != null)
                     {
-                        System.out.printf("These are the the last stop in each of the trips that arrive at %s:\n\n",
+                        System.out.printf("Here are the trips that arrive at %s:\n\n",
                                 arrivalTime);
-                        for(Stop stop : timedStops)
+                        for(Trip stop : timedStops)
                         {
                             System.out.print(stop.toString() + "\n\n");
                         }
                     }
                     else
                     {
-                        System.out.println("There are no stops that match your search.\n");
+                        System.out.println("There are no trips that match your search.\n");
                     }
                     break;
                 case "quit":

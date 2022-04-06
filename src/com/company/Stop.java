@@ -60,7 +60,7 @@ public class Stop implements Comparable<Stop> {
     @Override
     public int compareTo(Stop other)
     {
-        return Double.compare(this.getId(), other.getId());
+        return Integer.compare(id, other.getId());
     }
 
     @Override
