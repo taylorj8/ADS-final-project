@@ -14,11 +14,12 @@ public class Main {
         boolean running = true;
         while(running)
         {
-            System.out.println("What would you like to do? Enter the appropriate number or quit to exit:\n" +
+            System.out.print("What would you like to do?\n" +
                     "1. Find shortest path between two stops\n" +
                     "2. Search for stops by name\n" +
-                    "3. Search for stops by arrival time\n");
-            String userInput = s.next();
+                    "3. Search for stops by arrival time\n" +
+                    "Enter the appropriate number or quit to exit: ");
+            String userInput = s.nextLine();
 
             switch(userInput.toLowerCase())
             {
@@ -28,19 +29,20 @@ public class Main {
                     while(!validInput)
                     {
                         System.out.print("Enter the ID of the origin stop: ");
-                        try
+                        if(s.hasNextInt())
                         {
                             origin = s.nextInt();
                         }
-                        catch(Exception e)
+                        else
                         {
-                            System.out.println("Invalid input");
+                            System.out.println("Invalid input: enter an integer\n");
+                            s.nextLine();   // clear input
                             continue;
                         }
 
                         if(network.getIndex(origin) == -1)
                         {
-                            System.out.println("Origin ID is invalid");
+                            System.out.printf("Stop %d is not in the network\n", origin);
                         }
                         else
                         {
@@ -52,19 +54,20 @@ public class Main {
                     while(!validInput)
                     {
                         System.out.print("Enter the ID of the destination stop: ");
-                        try
+                        if(s.hasNextInt())
                         {
                             destination = s.nextInt();
                         }
-                        catch(Exception e)
+                        else
                         {
-                            System.out.println("Invalid input: enter an integer");
+                            System.out.println("Invalid input: enter an integer\n");
+                            s.nextLine(); //clear input
                             continue;
                         }
 
                         if(network.getIndex(destination) == -1)
                         {
-                            System.out.println("Destination ID is invalid");
+                            System.out.printf("Stop %d is not in the network\n", destination);
                         }
                         else
                         {
@@ -75,7 +78,7 @@ public class Main {
                             {
                                 int[] path = network.getPath(origin, destination, edgeTo);
 
-                                System.out.printf("The cost from stop %d to stop %d is %.01f, taking the path %d, ",
+                                System.out.printf("The lowest cost from stop %d to stop %d is %.01f, taking the path %d, ",
                                         origin, destination, cost, origin);
                                 for(int stop : path)
                                 {
@@ -89,10 +92,11 @@ public class Main {
                             }
                         }
                     }
+                    s.nextLine();   //clears input
                     break;
                 case "2":
                     System.out.print("Enter the search term: ");
-                    String searchTerm = s.next().toLowerCase();
+                    String searchTerm = s.nextLine().toLowerCase();
                     Stop[] matchingStops = network.getMatchingStops(searchTerm);
 
                     if(matchingStops.length != 0)
@@ -115,10 +119,10 @@ public class Main {
                     while(!inputValid)
                     {
                         System.out.print("Enter the time of arrival (formatted as hh:mm:ss): ");
-                        arrivalTime = s.next();
-                        time = network.convertTime(arrivalTime);
+                        arrivalTime = s.nextLine();
 
-                        if(time == -1)
+                        time = network.convertTime(arrivalTime);
+                        if(!arrivalTime.matches("\\d{1,2}:\\d{2}:\\d{2}") || time == -1)
                         {
                             System.out.println("Invalid input");
                         }
@@ -144,14 +148,14 @@ public class Main {
                     }
                     else
                     {
-                        System.out.print("There are no stops that match your search.\n\n");
+                        System.out.println("There are no stops that match your search.\n");
                     }
                     break;
                 case "quit":
                     running = false;
                     break;
                 default:
-                    System.out.println("Invalid input. ");
+                    System.out.println("Invalid input.\n");
             }
         }
         System.out.print("End of program");

@@ -168,14 +168,14 @@ public class Network {
                 return distTo[idIndex.get(destination)];
 
             // removes the stop with the lowest cost and stores its index
-            int u = idIndex.get(pq.remove().getStop());
+            int uIndex = idIndex.get(pq.remove().getStop());
 
-            if(!settled.contains(u))
+            if(!settled.contains(uIndex))
             {
                 // once stop is removed from pq it becomes settled
-                settled.add(u);
+                settled.add(uIndex);
 
-                Stop origin = stops.get(u);
+                Stop origin = stops.get(uIndex);
                 if(origin != null)
                 {
                     // process all neighbouring stops to current stop u
@@ -188,11 +188,11 @@ public class Network {
                         if(!settled.contains(v.getStop()))
                         {
                             // gets distance, and if lower than current distance, replaces it
-                            double cost = distTo[u] + v.getCost();
+                            double cost = distTo[uIndex] + v.getCost();
                             if(cost < distTo[vIndex])
                             {
                                 distTo[vIndex] = cost;
-                                edgeTo[vIndex] = u;
+                                edgeTo[vIndex] = uIndex;
                             }
                         }
                         // add each of the stops that neighbour u to the pq
@@ -201,7 +201,7 @@ public class Network {
                 }
             }
         }
-        return distTo[destination];
+        return distTo[idIndex.get(destination)];
     }
 
     public int[] getPath(int origin, int destination, int[] edgeTo)
@@ -302,7 +302,6 @@ public class Network {
     {
         return noStops;
     }
-
 }
 
 
