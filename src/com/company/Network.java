@@ -33,7 +33,7 @@ public class Network {
             String line = br.readLine();
             while(line != null)
             {
-                // pulls info on street from file, trims off whitespace from beginning and end if present and divides it on spaces into String array
+                // pulls info on street from file and divides it on spaces into String array
                 String[] info = line.split(",");
 
                 // code field can be blank - below handles that case
