@@ -9,7 +9,6 @@ public class Main {
     public static void main(String[] args) {
 
         Network network = new Network("stops.txt", "transfers.txt", "stop_times.txt");
-
         Scanner s = new Scanner(System.in);
         boolean running = true;
         while(running)
@@ -32,21 +31,19 @@ public class Main {
                         if(s.hasNextInt())
                         {
                             origin = s.nextInt();
+                            if(network.getIndex(origin) == -1)
+                            {
+                                System.out.printf("Stop %d is not in the network\n", origin);
+                            }
+                            else
+                            {
+                                validInput = true;
+                            }
                         }
                         else
                         {
                             System.out.println("Invalid input: enter an integer\n");
-                            s.nextLine();   // clear input
-                            continue;
-                        }
-
-                        if(network.getIndex(origin) == -1)
-                        {
-                            System.out.printf("Stop %d is not in the network\n", origin);
-                        }
-                        else
-                        {
-                            validInput = true;
+                            s.nextLine();   // clears input
                         }
                     }
 
@@ -57,46 +54,46 @@ public class Main {
                         if(s.hasNextInt())
                         {
                             destination = s.nextInt();
+                            if(network.getIndex(destination) == -1)
+                            {
+                                System.out.printf("Stop %d is not in the network\n", destination);
+                            }
+                            else
+                            {
+                                validInput = true;
+                                int[] edgeTo = new int[network.getNoStops()];
+                                double cost = network.dijkstraSingleDest(origin, destination, edgeTo);
+
+                                //if the cost == max_value, it means no path exists
+                                if(cost != Double.MAX_VALUE)
+                                {
+                                    int[] path = network.getPath(origin, destination, edgeTo);
+
+                                    System.out.printf("The lowest cost from stop %d to stop %d is %.01f, taking the path %d, ",
+                                            origin, destination, cost, origin);
+                                    for(int stop : path)
+                                    {
+                                        System.out.printf("%d, ", stop);
+                                    }
+                                    System.out.printf("%d.\n\n", destination);
+                                }
+                                else
+                                {
+                                    System.out.printf("No path exists between stop %d and stop %d.\n\n", origin, destination);
+                                }
+                            }
                         }
                         else
                         {
                             System.out.println("Invalid input: enter an integer\n");
-                            s.nextLine(); //clear input
-                            continue;
-                        }
-
-                        if(network.getIndex(destination) == -1)
-                        {
-                            System.out.printf("Stop %d is not in the network\n", destination);
-                        }
-                        else
-                        {
-                            validInput = true;
-                            int[] edgeTo = new int[network.getNoStops()];
-                            double cost = network.dijkstraSingleDest(origin, destination, edgeTo);
-                            if(cost != Double.MAX_VALUE)
-                            {
-                                int[] path = network.getPath(origin, destination, edgeTo);
-
-                                System.out.printf("The lowest cost from stop %d to stop %d is %.01f, taking the path %d, ",
-                                        origin, destination, cost, origin);
-                                for(int stop : path)
-                                {
-                                    System.out.printf("%d, ", stop);
-                                }
-                                System.out.printf("%d.\n\n", destination);
-                            }
-                            else
-                            {
-                                System.out.printf("No path exists between stop %d and stop %d.\n\n", origin, destination);
-                            }
+                            s.nextLine(); //clears input
                         }
                     }
                     s.nextLine();   //clears input
                     break;
                 case "2":
                     System.out.print("Enter the search term: ");
-                    String searchTerm = s.nextLine().toLowerCase();
+                    String searchTerm = s.nextLine().toLowerCase();     //converts to lowercase so matching ignores the case
                     Stop[] matchingStops = network.getMatchingStops(searchTerm);
 
                     if(matchingStops.length != 0)
@@ -116,19 +113,21 @@ public class Main {
                     boolean inputValid = false;
                     String arrivalTime = "";
                     int time = -1;
+
                     while(!inputValid)
                     {
                         System.out.print("Enter the time of arrival (formatted as hh:mm:ss): ");
                         arrivalTime = s.nextLine();
 
+                        // returns -1 if format invalid, -2 if numbers out of range
                         time = network.convertTime(arrivalTime);
-                        if(time == -2)
-                        {
-                            System.out.println("Numbers out of range");
-                        }
-                        else if(!arrivalTime.matches("\\d{1,2}:\\d{2}:\\d{2}") || time == -1)
+                        if(time == -1)
                         {
                             System.out.println("Invalid input");
+                        }
+                        else if(time == -2)
+                        {
+                            System.out.println("Numbers out of range");
                         }
                         else
                         {

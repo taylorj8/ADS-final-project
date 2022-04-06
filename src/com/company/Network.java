@@ -21,26 +21,28 @@ public class Network {
         idIndex = new HashMap<>();
         names = new TST<>();
         times = new TreeMap<>();
+
         try
         {
             File file = new File("src\\com\\company\\input-files\\" + stopsFile);
             BufferedReader br = new BufferedReader(new FileReader(file));
 
-            noStops = 0;
-            String line = br.readLine();    // first line of file skipped as just info about contents of file
-            line = br.readLine();
+            noStops = 0;        // noStops is incremented every time a new stop is added
+            br.readLine();      // first line of file skipped as just info about contents of file
+            String line = br.readLine();
             while(line != null)
             {
                 // pulls info on street from file, trims off whitespace from beginning and end if present and divides it on spaces into String array
-                String[] contents = line.split(",");
+                String[] info = line.split(",");
 
                 // code field can be blank - below handles that case
                 int code = -1;
-                if(!contents[1].equals(" "))
-                    code = Integer.parseInt(contents[1]);
+                if(!info[1].equals(" "))
+                    code = Integer.parseInt(info[1]);
 
-                // moves prefix to end of name
-                String name = contents[2];
+                // moves prefix to end of name. flagstop and 2-letter prefix can both be present, with flagstop first,
+                // so checks flagstop, moves it to end then checks if the new string has a 2-letter prefix also
+                String name = info[2];
                 String prefix = name.substring(0,9);
                 if(prefix.equals("FLAGSTOP "))
                     name = name.substring(9) + " " + prefix.trim();
@@ -49,12 +51,12 @@ public class Network {
                 if(prefix.equals("WB ") || prefix.equals("NB ") || prefix.equals("SB ") || prefix.equals("EB "))
                     name = name.substring(3) + " " + prefix.trim();
 
-                //added for clarity
-                int id = Integer.parseInt(contents[0]);
-                String desc = contents[3];
-                double lat = Double.parseDouble(contents[4]);
-                double lon = Double.parseDouble(contents[5]);
-                String zoneID = contents[6];
+                // added for clarity
+                int id = Integer.parseInt(info[0]);
+                String desc = info[3];
+                double lat = Double.parseDouble(info[4]);
+                double lon = Double.parseDouble(info[5]);
+                String zoneID = info[6];
 
                 Stop stop = new Stop(id, code, name, desc, lat, lon, zoneID);
                 stops.add(stop);
@@ -70,58 +72,65 @@ public class Network {
                 noStops++;
             }
 
+            // change the buffered reader's file to transfers
             br.close();
             file = new File("src\\com\\company\\input-files\\" + transfersFile);
             br = new BufferedReader(new FileReader(file));
 
-            line = br.readLine();
+            br.readLine();   // first line of file skipped as just info about contents of file
             line = br.readLine();
             while(line != null)
             {
-                String[] contents = line.split(",");
-                int origin = Integer.parseInt(contents[0]);
-                int destination = Integer.parseInt(contents[1]);
-                int type = Integer.parseInt(contents[2]);
+                String[] info = line.split(",");        // split comma separated line into its components
+                int origin = Integer.parseInt(info[0]);
+                int destination = Integer.parseInt(info[1]);
+                int type = Integer.parseInt(info[2]);
 
+                // cost of edges from this file is 2.0, unless type is 2
                 double cost = 2.0;
                 if(type == 2)
-                    cost = Double.parseDouble(contents[3]) / 100.0;
+                    cost = Double.parseDouble(info[3]) / 100.0;     // info[3] is min_transfer_time
 
                 int index = idIndex.get(origin);
-                if(index != -1)     // if stop is not on list, skip
+                if(index != -1)     // if stop doesn't exist, don't add edge
                 {
                     stops.get(index).addConnection(destination, cost);
                 }
                 line = br.readLine();
             }
 
+            // change the buffered reader's file to stop times
             br.close();
             file = new File("src\\com\\company\\input-files\\" + timesFile);
             br = new BufferedReader(new FileReader(file));
 
+            br.readLine();      // first line of file skipped as just info about contents of file
             line = br.readLine();
-            line = br.readLine();
+            // lines processed in pairs, so need to keep track of first and second line in pair
             String[] first, second = new String[0];
+
             while(line != null)
             {
-                first = line.split(",");
+                first = line.split(",");    //split first line into its components
                 int currentTripId = Integer.parseInt(first[0]);
-                second = br.readLine().split(",");
+                second = br.readLine().split(",");      // split second line into its components
 
                 int origin = Integer.parseInt(first[3]);
+                // inner while represents each trip - exits loop when trip id changes
                 while(Integer.parseInt(second[0]) == currentTripId && line != null)
                 {
                     int destination = Integer.parseInt(second[3]);
-
                     int index = idIndex.get(origin);
-                    if(index != -1)     // if stop is not on list, skip
+
+                    if(index != -1)     // if stop doesn't exist, skip
                     {
                         // add connection only if not already added
-                        if(!stops.get(index).containsDestination(destination))
+                        if(!stops.get(index).containsDest(destination))
                         {
                             stops.get(index).addConnection(destination, 1);
                         }
 
+                        // converts time from string representation to int, returns negative number if error
                         int time = convertTime(second[1]);
                         if(time >= 0)
                             addToTimes(time, stops.get(idIndex.get(destination)));
@@ -165,7 +174,7 @@ public class Network {
 
         while(settled.size() != noStops)
         {
-            // terminates once priority queue is empty
+            // terminates once priority queue is empty - returns relevant cost
             if(pq.isEmpty())
                 return distTo[idIndex.get(destination)];
 
@@ -203,20 +212,22 @@ public class Network {
                 }
             }
         }
-        return distTo[idIndex.get(destination)];
+        return distTo[idIndex.get(destination)];    // returns only the relevant cost
     }
 
     public int[] getPath(int origin, int destination, int[] edgeTo)
     {
-        Stack<Integer> pathStack = new Stack<>();
+        Stack<Integer> pathStack = new Stack<>();   // stack used to store and reverse order
 
+        // get id of stop in that is the adjacent to the destination on the shortest path
         int stop = stops.get(edgeTo[idIndex.get(destination)]).getId();
         while(stop != origin)
         {
-            pathStack.push(stop);
-            stop = stops.get(edgeTo[idIndex.get(stop)]).getId();
+            pathStack.push(stop);       // add stop to stack
+            stop = stops.get(edgeTo[idIndex.get(stop)]).getId();    // get next stop on shortest path
         }
 
+        // by popping from stack, effectively reverses order, so stop now go from origin to destination
         int[] path = new int[pathStack.size()];
         for(int i = 0; i < path.length; i++)
         {
@@ -237,7 +248,9 @@ public class Network {
     public Stop[] getMatchingStops(String searchTerm)
     {
         List<String> keys = new ArrayList<>();
+        // for every key with a prefix that matches, add to arraylist
         names.keysWithPrefix(searchTerm).forEach(keys::add);
+        // convert to array before returning
         Stop[] stops = new Stop[keys.size()];
         for(int i = 0; i < stops.length; i++)
         {
@@ -246,14 +259,15 @@ public class Network {
         return stops;
     }
 
-    //returns stops that arrive at passed time sorted by id
+    // returns stops that arrive at passed time, sorted by id
+    // returns null if no matching stops
     public Stop[] getStopsByTime(int time)
     {
         TreeSet<Stop> set = times.get(time);
-
         if(set == null)
             return null;
 
+        //convert tree set to array before returning
         Stop[] array = new Stop[set.size()];
         for(int i = 0; i < array.length; i++)
         {
@@ -264,14 +278,16 @@ public class Network {
 
     public void addToTimes(int time, Stop stop)
     {
+        // tree set used as it maintains sorted order and implicitly handles duplicates
         TreeSet<Stop> set = times.get(time);
+        // if no times already in tree tree, new tree set made and added
         if(set == null)
         {
             TreeSet<Stop> newSet = new TreeSet<>();
             newSet.add(stop);
             times.put(time, newSet);
         }
-        else
+        else    // if time already in tree, add to the tree set
         {
             set.add(stop);
         }
@@ -280,23 +296,22 @@ public class Network {
     // converts time string to int, returns negative number based on failure
     public int convertTime(String str)
     {
-        int[] timeArray = new int[3];
-        try
-        {
-            String[] timeStrArray = str.trim().split(":");
-            for(int i = 0; i < timeStrArray.length; i++)
-            {
-                timeArray[i] = Integer.parseInt(timeStrArray[i]);
-            }
-        }
-        catch(Exception e)
-        {
+        // checks string in correct format
+        if(!str.matches("\\d{1,2}:\\d{2}:\\d{2}"))
             return -1;
+
+        int[] timeArray = new int[3];
+        String[] timeStrArray = str.trim().split(":");      // split hours, minutes, seconds into string array
+        for(int i = 0; i < timeStrArray.length; i++)
+        {
+            timeArray[i] = Integer.parseInt(timeStrArray[i]);
         }
 
+        // check numbers in correct range
         if(timeArray[0] < 0 || timeArray[0] > 23 || timeArray[1] < 0 || timeArray[1] > 59 || timeArray[2] < 0 || timeArray[2] > 59)
             return -2;
 
+        // convert to single int and return
         return (timeArray[0] * 100 + timeArray[1]) * 100 + timeArray[2];
     }
 

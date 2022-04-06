@@ -37,7 +37,7 @@ public class Stop implements Comparable<Stop> {
         connections.add(new Connection(destination, cost));
     }
 
-    public boolean containsDestination(int destination)
+    public boolean containsDest(int destination)
     {
         for(Connection connection : connections)
         {
@@ -66,16 +66,16 @@ public class Stop implements Comparable<Stop> {
     @Override
     public String toString()
     {
-        String codeString = "";
+        // code not always present in file, if not found, code = n/a
+        String codeString = "n/a";
         if(code != -1)
-            codeString += code;
-        else
-            codeString = "n/a";
+            codeString = String.valueOf(code);
 
-
+        // prints all info about stop
         StringBuilder str = new StringBuilder(String.format("Name: %s\nDescription: %s\nID: %d\nCode: %s\nZone ID: %s\nLongitude: %f\nLatitude: %f\nConnected stop(s) by id: ",
                 name, desc, id, codeString, zoneId, lon, lat));
 
+        // if stop has connections, adds all those connections to the string
         if(connections.size() != 0)
         {
             for(Connection connection : connections)
@@ -86,7 +86,9 @@ public class Stop implements Comparable<Stop> {
         else
         {
             str.append("n/a");
+            return str.toString();
         }
+        // trims off end of string to get rid of trailing ", "
         return str.substring(0, str.length()-2);
     }
 }
