@@ -1,3 +1,5 @@
+// @author Jamie Taylor
+
 package com.company;
 
 public class Trip implements Comparable<Trip> {

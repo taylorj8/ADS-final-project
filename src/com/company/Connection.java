@@ -1,4 +1,4 @@
-// author Jamie Taylor
+// @author Jamie Taylor
 
 package com.company;
 
