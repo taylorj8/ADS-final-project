@@ -61,25 +61,32 @@ public class Main {
                             else
                             {
                                 validInput = true;
-                                int[] edgeTo = new int[network.getNoStops()];
-                                double cost = network.dijkstraSingleDest(origin, destination, edgeTo);
-
-                                //if the cost == max_value, it means no path exists
-                                if(cost != Double.MAX_VALUE)
+                                if(origin == destination)
                                 {
-                                    int[] path = network.getPath(origin, destination, edgeTo);
-
-                                    System.out.printf("The lowest cost from stop %d to stop %d is %.01f, taking the path %d, ",
-                                            origin, destination, cost, origin);
-                                    for(int stop : path)
-                                    {
-                                        System.out.printf("%d, ", stop);
-                                    }
-                                    System.out.printf("%d.\n\n", destination);
+                                    System.out.println("The cost from a stop to itself is 0.0.\n");
                                 }
                                 else
                                 {
-                                    System.out.printf("No path exists between stop %d and stop %d.\n\n", origin, destination);
+                                    int[] edgeTo = new int[network.getNoStops()];
+                                    double cost = network.dijkstraSingleDest(origin, destination, edgeTo);
+
+                                    //if the cost == max_value, it means no path exists
+                                    if(cost != Double.MAX_VALUE)
+                                    {
+                                        int[] path = network.getPath(origin, destination, edgeTo);
+
+                                        System.out.printf("The lowest cost from stop %d to stop %d is %.01f, taking the path %d, ",
+                                                origin, destination, cost, origin);
+                                        for(int stop : path)
+                                        {
+                                            System.out.printf("%d, ", stop);
+                                        }
+                                        System.out.printf("%d.\n\n", destination);
+                                    }
+                                    else
+                                    {
+                                        System.out.printf("No path exists between stop %d and stop %d.\n\n", origin, destination);
+                                    }
                                 }
                             }
                         }
